@@ -1,0 +1,58 @@
+# 错误码
+
+调用 Geekit API 时，可根据 HTTP 状态码、错误体和[调用日志](https://geekit.top/usage-logs)定位问题。下表列出常见原因和处理方法。
+
+## HTTP 状态码
+
+| 状态码 | 常见原因 | 处理方法 |
+| --- | --- | --- |
+| `400` 请求错误 | JSON 格式、请求字段、模型参数或协议不符合要求 | 根据 `error.message` 修正请求，核对模型 ID、接口路径和参数范围 |
+| `401` 认证失败 | API Key 缺失、错误、过期或已禁用 | 在 [API Keys](https://geekit.top/keys) 检查令牌，重新设置鉴权头并重启客户端 |
+| `402` 余额不足 | 上游接口返回余额不足 | 检查错误体和调用日志，联系支持人员核查上游服务 |
+| `403` 访问受限或额度不足 | 令牌模型权限、IP 白名单、分组、会员资格或可用额度不满足要求 | 检查令牌限制、账户与令牌额度、订阅状态，按需前往[钱包](https://geekit.top/wallet)充值 |
+| `404` 资源不存在 | BaseURL、接口路径或模型 ID 错误，上游资源不存在 | 按[首次调用 API](getting-started.md)核对路径，从[模型列表](https://geekit.top/docs/api/models)复制准确 ID |
+| `408` 请求超时 | 上传或请求传输耗时过长 | 检查网络，缩小文件后重试 |
+| `413` 请求体过大 | 文件、图片或请求体超过服务限制 | 压缩文件、拆分输入，核对对应接口限制 |
+| `422` 参数错误 | 上游无法处理参数或字段组合 | 根据错误信息调整参数、类型和模型能力设置 |
+| `429` 请求速率达到上限 | 请求速率、并发或上游配额达到上限 | 降低并发，按 `Retry-After` 提示等待，并使用指数退避 |
+| `500` 服务内部错误 | Geekit 或上游内部故障 | 查看[服务状态](https://geekit.top/docs/support/status)，稍后重试，持续失败时提交请求 ID |
+| `502` 网关错误 | 上游连接失败或响应无效 | 稍后重试，结合调用日志定位上游异常 |
+| `503` 服务暂不可用 | 暂无可用渠道、上游繁忙或维护 | 稍后重试，查看服务状态，必要时选择其他可用模型 |
+| `504` 网关超时 | 上游响应超过网关时限 | 减少输入或输出长度，使用流式请求并检查客户端超时设置 |
+
+Geekit 的账户或令牌额度不足通常返回 `403`。`402`、`408`、`413`、`422` 等也可能来自上游或入口代理，具体原因以本次错误体为准。
+
+## 错误响应
+
+以下示例展示 OpenAI 兼容接口的错误结构。
+
+```json
+{
+  "error": {
+    "message": "Invalid request parameters",
+    "type": "geekit_error",
+    "param": "",
+    "code": "invalid_request"
+  }
+}
+```
+
+`message` 提供具体原因，`type` 表示错误类型，`code` 提供可供程序识别的错误标识。Anthropic、Gemini 等接口按各自协议返回错误结构。
+
+| 错误标识 | 排查方向 |
+| --- | --- |
+| `invalid_request`、`bad_request_body` | 请求体、字段类型与参数范围 |
+| `access_denied` | 模型、令牌、IP 或分组权限 |
+| `insufficient_user_quota` | 账户、订阅或可用额度 |
+| `pre_consume_token_quota_failed` | 令牌额度与请求预计消耗 |
+| `get_channel_failed`、`channel:no_available_key` | 当前模型与分组的渠道可用性 |
+| `model_price_error` | 当前模型的计费配置，联系支持人员 |
+| `do_request_failed`、`bad_response_status_code` | 上游网络与错误响应 |
+
+## 重试与问题反馈
+
+对 `429` 和临时性 `5xx` 使用有次数上限的指数退避，优先遵循响应中的 `Retry-After`。鉴权、权限和参数错误应先修正配置。流式响应中断或任务提交超时后，先核对调用日志或任务状态，再决定是否重试。
+
+反馈问题时提供请求时间及所在时区、模型 ID、接口路径、HTTP 状态码、错误标识和请求 ID，并对令牌及请求中的私人数据脱敏。
+
+本页参考 DeepSeek 错误码文档的组织方式，并按 Geekit 的鉴权、额度与路由行为补充说明。参考资料见 [DeepSeek 错误码](https://api-docs.deepseek.com/zh-cn/quick_start/error_codes/)。
