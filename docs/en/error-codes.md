@@ -54,5 +54,3 @@ An example error from an OpenAI-compatible endpoint follows.
 Use bounded exponential backoff for `429` and temporary `5xx` errors, honoring `Retry-After` when supplied. Correct authentication, permission, and parameter errors before retrying. After a stream interruption or task submission timeout, check usage logs or task status before sending another request.
 
 Include the request time and timezone, model ID, endpoint, HTTP status, error identifier, and request ID when contacting support. Redact keys and private request data.
-
-This page follows the organization of DeepSeek's error documentation and adds Geekit authentication, quota, and routing behavior. See [DeepSeek error codes](https://api-docs.deepseek.com/quick_start/error_codes/).
